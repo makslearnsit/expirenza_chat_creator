@@ -1,23 +1,18 @@
 import logging
 import sys
+import os
 from pathlib import Path
 from telegram.ext import Application, CommandHandler
 from telegram.error import InvalidToken
 
-# Fix import paths
-current_dir = Path(__file__).parent
-if current_dir.name == 'telegram_group_creator':
-    # Local imports within the module
-    from core.config import BOT_TOKEN
-    from core.logging_config import setup_logging
-    from bot_logic.handlers import get_conversation_handler, cancel
-else:
-    # Add parent directory to path for imports
-    parent_dir = current_dir.parent
-    sys.path.append(str(parent_dir))
-    from telegram_group_creator.core.config import BOT_TOKEN
-    from telegram_group_creator.core.logging_config import setup_logging
-    from telegram_group_creator.bot_logic.handlers import get_conversation_handler, cancel
+# Add parent directory to sys.path to ensure imports work
+parent_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(parent_dir))
+
+# Now import local modules
+from telegram_group_creator.core.config import BOT_TOKEN
+from telegram_group_creator.core.logging_config import setup_logging
+from telegram_group_creator.bot_logic.handlers import get_conversation_handler, cancel
 
 # Налаштовуємо логування на самому початку
 setup_logging()
@@ -26,6 +21,11 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     """Запускає Telegram бота."""
     logger.info("Starting bot...")
+    
+    # Debug environment
+    logger.info(f"Working directory: {os.getcwd()}")
+    logger.info(f"Python path: {sys.path}")
+    logger.info(f"Environment variables: {os.environ.keys()}")
 
     if not BOT_TOKEN:
         logger.critical("Bot token not found. Exiting.")
