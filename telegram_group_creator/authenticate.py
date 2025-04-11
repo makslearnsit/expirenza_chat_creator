@@ -1,7 +1,22 @@
 # authenticate.py
 import asyncio
+import os
+import sys
+from pathlib import Path
+
+# Add parent directory to path to resolve imports correctly
+current_dir = Path(__file__).parent
+# When running on Heroku or elsewhere, ensure imports work
+if current_dir.name == 'telegram_group_creator':
+    # Import from the local module
+    from core.config import API_ID, API_HASH, SESSION_NAME
+else:
+    # Try to add the parent directory to the path
+    parent_dir = current_dir.parent
+    sys.path.append(str(parent_dir))
+    from telegram_group_creator.core.config import API_ID, API_HASH, SESSION_NAME
+
 from telethon import TelegramClient
-from core.config import API_ID, API_HASH, SESSION_NAME # Імпортуємо з конфігу
 
 async def run_auth():
     print("Starting Telethon authentication...")

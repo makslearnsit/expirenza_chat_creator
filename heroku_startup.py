@@ -25,7 +25,11 @@ async def run_authentication():
     logger.info("Starting authentication process...")
     try:
         # Import and run the authentication function
-        sys.path.append(str(Path(__file__).parent))
+        # Ensure the telegram_group_creator directory is in the Python path
+        project_root = Path(__file__).parent
+        sys.path.append(str(project_root))
+        
+        # Import the authenticate module and run auth
         from telegram_group_creator.authenticate import run_auth
         await run_auth()
         return True

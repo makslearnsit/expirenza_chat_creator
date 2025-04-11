@@ -1,10 +1,23 @@
 import logging
+import sys
+from pathlib import Path
 from telegram.ext import Application, CommandHandler
 from telegram.error import InvalidToken
 
-from core.config import BOT_TOKEN
-from core.logging_config import setup_logging
-from bot_logic.handlers import get_conversation_handler, cancel # Імпортуємо cancel для окремого додавання
+# Fix import paths
+current_dir = Path(__file__).parent
+if current_dir.name == 'telegram_group_creator':
+    # Local imports within the module
+    from core.config import BOT_TOKEN
+    from core.logging_config import setup_logging
+    from bot_logic.handlers import get_conversation_handler, cancel
+else:
+    # Add parent directory to path for imports
+    parent_dir = current_dir.parent
+    sys.path.append(str(parent_dir))
+    from telegram_group_creator.core.config import BOT_TOKEN
+    from telegram_group_creator.core.logging_config import setup_logging
+    from telegram_group_creator.bot_logic.handlers import get_conversation_handler, cancel
 
 # Налаштовуємо логування на самому початку
 setup_logging()
