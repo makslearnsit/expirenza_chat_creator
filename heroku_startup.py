@@ -12,7 +12,7 @@ import requests
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# Setup basic logging
+# Setup basic logging with reduced verbosity
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -20,7 +20,11 @@ logging.basicConfig(
 logger = logging.getLogger('heroku_startup')
 
 # Get the app URL from environment or default to localhost
-APP_URL = os.environ.get('HEROKU_APP_URL', 'https://expirenza-telegram-bot-e246d9fcc082.herokuapp.com')
+APP_URL = os.environ.get('HEROKU_APP_URL', 'https://expirenza-telegram-bot-eu-2bc6b8b0d3f4.herokuapp.com')
+
+# Reduce logging verbosity for requests library
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('requests').setLevel(logging.WARNING)
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     """Simple HTTP request handler to keep Heroku happy"""
@@ -28,22 +32,30 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(b'Telegram bot is running!')
+        response = f'<html><body>Telegram bot is running! Uptime: {time.time() - startup_time:.2f} seconds</body></html>'
+        self.wfile.write(response.encode())
     
     def log_message(self, format, *args):
         # Suppress the default logging to reduce noise
         return
 
 def keep_alive():
-    """Send periodic requests to the app to prevent it from sleeping"""
+    """Send periodic requests to the app to prevent it from sleeping, with optimized frequency"""
+    ping_count = 0
     while True:
         try:
-            requests.get(APP_URL, timeout=10)
-            logger.info(f"Keep-alive ping sent to {APP_URL}")
+            # Only log every 5th ping to reduce log size
+            verbose = (ping_count % 5 == 0)
+            requests.get(APP_URL, timeout=5)
+            if verbose:
+                logger.info(f"Keep-alive ping sent to {APP_URL}")
+            ping_count += 1
         except Exception as e:
             logger.error(f"Keep-alive request failed: {e}")
-        # Sleep for 14 minutes (Heroku sleeps after 30 min of inactivity)
-        time.sleep(840)  
+        
+        # Sleep for 20 minutes - Heroku Basic dynos sleep after 30 min of inactivity
+        # This is less frequent than before to reduce resource usage
+        time.sleep(1200)
 
 def start_web_server():
     """Start a simple web server to keep Heroku happy"""
@@ -77,10 +89,11 @@ def start_main_application():
         # Get the path to main.py
         main_script_path = Path(__file__).parent / "telegram_group_creator" / "main.py"
         
-        # Print out environment for debugging
-        logger.info(f"Working directory: {os.getcwd()}")
-        logger.info(f"Files in current directory: {os.listdir()}")
-        logger.info(f"Files in telegram_group_creator: {os.listdir('telegram_group_creator')}")
+        # Only log directory contents on first startup for debugging
+        if os.environ.get('DEBUG_LOGGING', '0') == '1':
+            logger.info(f"Working directory: {os.getcwd()}")
+            logger.info(f"Files in current directory: {os.listdir()}")
+            logger.info(f"Files in telegram_group_creator: {os.listdir('telegram_group_creator')}")
         
         # Add the project root to PYTHONPATH
         project_root = Path(__file__).parent
@@ -91,6 +104,9 @@ def start_main_application():
     except Exception as e:
         logger.error(f"Failed to start main application: {e}")
         sys.exit(1)
+
+# Global startup time to track uptime
+startup_time = time.time()
 
 def main():
     """Main entry point for Heroku"""
