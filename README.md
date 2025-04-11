@@ -13,8 +13,8 @@ A Telegram bot that automates group creation and management tasks using Telethon
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/telegram-group-creator.git
-   cd telegram-group-creator
+   git clone https://github.com/makslearnsit/expirenza_chat_creator.git
+   cd expirenza_chat_creator
    ```
 
 2. Create a virtual environment and install dependencies:

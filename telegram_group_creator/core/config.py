@@ -41,6 +41,8 @@ PREDEFINED_MANAGERS = {
     4: {"name": "Карина", "username": "@tarasyukki"},
     5: {"name": "Марія", "username": "@lebidmariia"},
     6: {"name": "Аня", "username": "@AnnOlegivna"},
+    7: {"name": "Макс", "username": "@Maksspustovit"},
+
 }
 
 # Список ID користувачів, яким дозволено користуватися ботом
