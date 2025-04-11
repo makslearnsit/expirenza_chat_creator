@@ -35,10 +35,6 @@ venv.bak/
 *.swp
 *.swo
 
-# Telegram sessions
-*.session
-*.session-journal
-
 # Logs
 logs/
 *.log
