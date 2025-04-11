@@ -7,6 +7,8 @@ import sys
 import logging
 import subprocess
 import threading
+import time
+import requests
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -17,6 +19,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger('heroku_startup')
 
+# Get the app URL from environment or default to localhost
+APP_URL = os.environ.get('HEROKU_APP_URL', 'https://expirenza-telegram-bot-e246d9fcc082.herokuapp.com')
+
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     """Simple HTTP request handler to keep Heroku happy"""
     def do_GET(self):
@@ -24,13 +29,34 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(b'Telegram bot is running!')
+    
+    def log_message(self, format, *args):
+        # Suppress the default logging to reduce noise
+        return
+
+def keep_alive():
+    """Send periodic requests to the app to prevent it from sleeping"""
+    while True:
+        try:
+            requests.get(APP_URL, timeout=10)
+            logger.info(f"Keep-alive ping sent to {APP_URL}")
+        except Exception as e:
+            logger.error(f"Keep-alive request failed: {e}")
+        # Sleep for 14 minutes (Heroku sleeps after 30 min of inactivity)
+        time.sleep(840)  
 
 def start_web_server():
     """Start a simple web server to keep Heroku happy"""
-    port = int(os.environ.get('PORT', 8080))
-    logger.info(f"Starting web server on port {port}")
-    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
-    server.serve_forever()
+    try:
+        port = int(os.environ.get('PORT', 8080))
+        logger.info(f"Starting web server on port {port}")
+        server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+        server.serve_forever()
+    except Exception as e:
+        logger.error(f"Web server error: {e}")
+        # Try to restart the web server if it fails
+        time.sleep(5)
+        start_web_server()
 
 def check_session_file():
     """Check if the Telethon session file exists"""
@@ -76,6 +102,11 @@ def main():
         web_thread = threading.Thread(target=start_web_server, daemon=True)
         web_thread.start()
         logger.info("Web server thread started")
+        
+        # Start keep-alive thread to prevent the app from sleeping
+        keepalive_thread = threading.Thread(target=keep_alive, daemon=True)
+        keepalive_thread.start()
+        logger.info("Keep-alive thread started")
         
         # Start the main application in the main thread
         start_main_application()
