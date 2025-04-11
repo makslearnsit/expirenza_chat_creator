@@ -1,6 +1,74 @@
 # Telegram Group Creator Bot
 
-A Telegram bot that automates group creation and management tasks using Telethon and python-telegram-bot.
+A Telegram bot for creating and managing group chats.
+
+## Heroku Deployment
+
+This project includes a custom Heroku setup that handles Telegram authentication before starting the main application.
+
+### Deployment Steps
+
+1. Create a Heroku account and install the Heroku CLI
+2. Log in to Heroku:
+   ```
+   heroku login
+   ```
+3. Create a new Heroku app:
+   ```
+   heroku create your-app-name
+   ```
+4. Configure environment variables:
+   ```
+   heroku config:set API_ID=your_api_id
+   heroku config:set API_HASH=your_api_hash
+   heroku config:set BOT_TOKEN=your_bot_token
+   heroku config:set SESSION_NAME=your_session_name
+   ```
+5. Deploy to Heroku:
+   ```
+   git push heroku main
+   ```
+
+### Authentication Process
+
+When the app starts on Heroku:
+
+1. The authentication script will run first
+2. You will need to complete the authentication process through Heroku logs
+3. After authentication is complete, the main bot will start automatically
+
+To view logs and complete authentication:
+
+```
+heroku logs --tail
+```
+
+## Local Development
+
+To run the application locally:
+
+1. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+2. Run the authentication script first:
+   ```
+   python -m telegram_group_creator.authenticate
+   ```
+3. Then run the main application:
+   ```
+   python -m telegram_group_creator.main
+   ```
+
+## Project Structure
+
+- `telegram_group_creator/` - Main application directory
+  - `authenticate.py` - Telegram authentication script
+  - `main.py` - Main bot application
+- `heroku_startup.py` - Heroku entry point that handles authentication
+- `Procfile` - Heroku process definition file
+- `requirements.txt` - Python dependencies
+- `runtime.txt` - Python version specification for Heroku
 
 ## Features
 
@@ -45,18 +113,6 @@ Available commands:
 
 - `/start` - Start the conversation
 - `/cancel` - Cancel the current operation
-
-## Project Structure
-
-```
-telegram_group_creator/
-├── bot_logic/       # Bot command handlers and conversation logic
-├── core/            # Core configuration and utilities
-├── utils/           # Helper functions
-├── main.py          # Entry point for the application
-├── authenticate.py  # Authentication utilities
-└── requirements.txt # Project dependencies
-```
 
 ## License
 
