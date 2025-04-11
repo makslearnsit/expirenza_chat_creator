@@ -1,0 +1,3 @@
+python-telegram-bot[ext]>=20.7 # Асинхронна версія бібліотеки
+Telethon>=1.30
+python-dotenv>=1.0.0
