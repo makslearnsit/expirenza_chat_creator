@@ -6,7 +6,9 @@ import os
 import sys
 import logging
 import subprocess
+import threading
 from pathlib import Path
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # Setup basic logging
 logging.basicConfig(
@@ -14,6 +16,21 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger('heroku_startup')
+
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    """Simple HTTP request handler to keep Heroku happy"""
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'Telegram bot is running!')
+
+def start_web_server():
+    """Start a simple web server to keep Heroku happy"""
+    port = int(os.environ.get('PORT', 8080))
+    logger.info(f"Starting web server on port {port}")
+    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+    server.serve_forever()
 
 def check_session_file():
     """Check if the Telethon session file exists"""
@@ -55,7 +72,12 @@ def main():
     
     # First check if the session file exists
     if check_session_file():
-        # Start the main application
+        # Start web server in a separate thread
+        web_thread = threading.Thread(target=start_web_server, daemon=True)
+        web_thread.start()
+        logger.info("Web server thread started")
+        
+        # Start the main application in the main thread
         start_main_application()
     else:
         logger.error("Session file check failed, cannot start application")
